@@ -168,10 +168,8 @@ class TileCollection
 		return sorted
 	
 	_wrap_index: (idx, length) ->
-		while idx < 0
-			idx += length
-		while idx >= length
-			idx -= length
+		idx += length while idx < 0
+		idx -= length while idx >= length
 		idx
 
 	filter: (f, items) -> (item for item in items when f(item))
@@ -503,8 +501,7 @@ class BaseTiledLayout extends BaseLayout
 		axis = Axis.other(@main_axis)
 
 		extend_to = (size, array, generator) ->
-			while array.length < size
-				array.push(generator())
+            array.push(generator()) while array.length < size
 
 		zip = (a,b) ->
 			return ([a[i], b[i]] for i in [0 ... Math.min(a.length, b.length)])

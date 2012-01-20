@@ -19,10 +19,16 @@ const GLib = imports.gi.GLib;
 const KEYBINDING_BASE = 'org.gnome.shell.extensions.net.gfxmonk.shellshape.keybindings';
 
 
+// Primary 'extension' object.  This is instantiated and enabled by the
+// main() function declared at the bottom of this file.
 const Ext = function Ext() {
 	let self = this;
 	self.log = Log.getLogger("shellshape.extension");
 
+	// Utility method that 'safely' executes a callback by catching any
+	// exceptions and logging the traceback and a caller-provided
+	// description of the action.  It is used periodically throughout this
+	// object, but nowhere else.
 	self._do = function _do(action, desc) {
 		try {
 			action();
@@ -32,6 +38,9 @@ const Ext = function Ext() {
 		}
 	};
 
+
+	// Utility method that binds a callback to a named keypress-action.
+	// Called exclusively from the _init_keybindings method of this object.
 	function handle(name, func) {
 		self._bound_keybindings[name] = true;
 		var added = self.current_display().add_keybinding(name,
@@ -46,15 +55,49 @@ const Ext = function Ext() {
 		}
 	}
 
+
+	// Given a `proxy GIName:Meta.Workspace`, return a corresponding
+	// shellshape Workspace (as defined in shellshape/workspace.js).
+	// These are cached in the self.workspaces object and dynamically
+	// created by this method in a singleton-type pattern.
 	self.get_workspace = function get_workspace(meta_workspace) {
 		let workspace = self.workspaces[meta_workspace];
+
+		// If this workspace hasn't been encountered before...
 		if(typeof(workspace) == "undefined") {
+
+			// Build a new LayoutState object using our 'bounds' attr.
+
+			// TODO -- the bounds attribute is derived from the size
+			// of the 'screen' and 'monitor' during the .enable() method.
+			// That code overlooks the possibility of two monitors, so
+			// any attempt at two monitors may have to be taken up here
+			// as well.
+
 			var state = new Tiling.LayoutState(self.bounds);
+
+			// Using the new state object and the passed-in
+			// gnome-shell meta workspace, both create a new
+			// shellshape workspace and save it to the
+			// self.workspaces cache.
 			workspace = self.workspaces[meta_workspace] = new Workspace(meta_workspace, state, self);
 		}
 		return workspace;
 	};
 
+    // Remove a workspace from the extension's cache.  Disable it first.
+	self.remove_workspace = function(meta_workspace) {
+		self.log.debug("disabling workspace...");
+		var ws = self.workspaces[meta_workspace];
+		if(ws != null) {
+			self._do(function() {ws._disable();}, 'disable workspace');
+			delete self.workspaces[meta_workspace];
+		}
+	};
+
+	// Much the same as .get_workspace(...) above.  Given a gome-shell
+	// meta window, return a shellshape Window object and cache the result
+	// if its newly created.
 	self.get_window = function get_window(meta_window, create_if_necessary) {
 		if(typeof(create_if_necessary) == 'undefined') {
 			create_if_necessary = true;
@@ -70,26 +113,42 @@ const Ext = function Ext() {
 		return win;
 	};
 
+	// Remove a window from the extension's cache.
+	self.remove_window = function(meta_window) {
+		delete self.windows[meta_window];
+	};
+
+	// Returns a Workspace (shellshape/workspace.js) representing the
+	// current workspace.
 	self.current_workspace = function current_workspace() {
 		return self.get_workspace(self.current_meta_workspace());
 	};
 
+	// Return a gnome-shell meta-workspace representing the current workspace.
 	self.current_meta_workspace = function current_meta_workspace() {
 		return global.screen.get_workspace_by_index(global.screen.get_active_workspace_index());
 	};
 
+	// Returns the Layout (shellshape/tiling.js,coffee) tied to the current
+	// workspace.
 	self.current_layout = function current_layout() {
 		return self.get_workspace(self.current_meta_workspace()).layout;
 	};
 
+	// Returns the gnome-shell meta-display that is currently active.
 	self.current_display = function current_display() {
 		return global.screen.get_display();
 	};
 
+	// Returns the shellshape Window corresponding with the currently
+	// focused-on window.
 	self.current_window = function current_window() {
 		return self.get_window(self.current_display()['focus-window']);
 	};
 
+	// Changes the current workspace by +1 or -1.  If provided with a
+	// window, then that window is moved to the destination workspace.
+	// Called directly upon keypress.  Bound in _init_keybindings().
 	self.switch_workspace = function switch_workspace(offset, window) {
 		let activate_index = global.screen.get_active_workspace_index()
 		let new_index = activate_index + offset;
@@ -107,6 +166,7 @@ const Ext = function Ext() {
 		}
 	};
 
+	// Bind keys to callbacks.
 	self._init_keybindings = function _init_keybindings() {
 		self.log.debug("adding keyboard handlers for Shellshape");
 		var BORDER_RESIZE_INCREMENT = 0.05;
@@ -157,24 +217,16 @@ const Ext = function Ext() {
 		self.log.debug("Done adding keyboard handlers for Shellshape");
 	};
 
+	// Change the layout of the current workspace.
 	self.change_layout = function(cls) {
 		self.current_workspace().set_layout(cls);
+		// TODO -- what does this next line do?  It needs to be documented.
 		self.emit('layout-changed');
 	};
-	
-	self.remove_workspace = function(meta_workspace) {
-		self.log.debug("disabling workspace...");
-		var ws = self.workspaces[meta_workspace];
-		if(ws != null) {
-			self._do(function() {ws._disable();}, 'disable workspace');
-			delete self.workspaces[meta_workspace];
-		}
-	};
 
-	self.remove_window = function(meta_window) {
-		delete self.windows[meta_window];
-	};
-
+	// Connects gnome-shell messaging (signalling) between other objects and
+	// this extension.  Keeps a list of bound objects so we can later
+	// disconnect ourselves from them one by one or en masse.k
 	self._connect = function(owner, subject, name, cb) {
 		if (!owner.hasOwnProperty('_bound_signals')) {
 			owner._bound_signals = [];
@@ -182,11 +234,15 @@ const Ext = function Ext() {
 		owner._bound_signals.push([subject, subject.connect(name, cb)]);
 	};
 
+
+	// Connect callbacks to all workspaces
 	self._init_workspaces = function() {
 		self.screen = global.screen;
 		function _init_workspace (i) {
 			self.get_workspace(self.screen.get_workspace_by_index(i));
 		};
+
+		// TODO - how will this play into multiple monitors
 		self._connect(self, self.screen, 'workspace-added', function(screen, i) { _init_workspace(i); });
 		self._connect(self, self.screen, 'workspace-removed', self.remove_workspace);
 
@@ -210,16 +266,17 @@ const Ext = function Ext() {
 		});
 	};
 
+	// Simply enable ShellshapeIndicator
 	self._init_indicator = function() {
 		ShellshapeIndicator.enable(self);
 	};
 
+	// Returns a string representation of the extension.
 	self.toString = function() {
 		return "<Shellshape Extension>";
 	};
 
-	self.log.info("shellshape initialized!");
-
+	// Resets the workspaces, windows, bounds, and keybindings state
 	self._reset_state = function() {
 		// reset stateful variables
 		self.workspaces = {};
@@ -228,6 +285,8 @@ const Ext = function Ext() {
 		self._bound_keybindings = {};
 	};
 
+	// Turn on the extension.  Grabs the screen size to set up boundaries
+	// in the process.
 	self.enable = function() {
 		self.log.info("shellshape enable() called");
 		self._reset_state();
@@ -244,6 +303,7 @@ const Ext = function Ext() {
 		self.log.info("shellshape enabled");
 	};
 
+	// Unbinds keys
 	self._unbind_keys = function() {
 		var display = self.current_display();
 		for (k in self._bound_keybindings) {
@@ -256,6 +316,8 @@ const Ext = function Ext() {
 		}
 	};
 
+	// Disconnect from all other objects to which we have bound
+	// callbacks to signals.
 	self._disconnect_signals = function(owner) {
 		if(owner._bound_signals == null) return;
 		for(var i=0; i<owner._bound_signals.length; i++) {
@@ -267,6 +329,8 @@ const Ext = function Ext() {
 		delete owner._bound_signals;
 	};
 
+	// Disconnects from *all* workspaces.  Disables and removes
+	// them from our cache
 	self._disconnect_workspaces = function() {
 		for (var k in self.workspaces) {
 			if (self.workspaces.hasOwnProperty(k)) {
@@ -275,6 +339,7 @@ const Ext = function Ext() {
 		}
 	};
 
+	// Disable the extension.
 	self.disable = function() {
 		self.log.info("shellshape disable() called");
 		self._do(function() { ShellshapeIndicator.disable();}, "disable indicator");
@@ -284,15 +349,21 @@ const Ext = function Ext() {
 		self._reset_state();
 		self.log.info("shellshape disabled");
 	};
+
+	// If we got here, then nothing exploded while defining the extension.
+	self.log.info("shellshape initialized!");
 };
 
 Signals.addSignalMethods(Ext.prototype);
 
+// Initializes logging.
+// TODO -- should this be moved to its own .js file?
 function _init_logging() {
 	let root_logger = Log.getLogger("shellshape");
 	let GjsAppender = imports.log4javascript_gjs_appender.GjsAppender;
 	let appender = new GjsAppender();
 	appender.setLayout(new Log.PatternLayout("%-5p: %m"));
+	// TODO -- pull debug level from a ~/.shellshaperc file?
 	let shellshape_debug = GLib.getenv("SHELLSHAPE_DEBUG");
 	let root_level = Log.Level.INFO;
 	root_logger.addAppender(appender);
@@ -339,10 +410,12 @@ function init() {
 	//TODO: move into separate extension
 	St.set_slow_down_factor(0.75);
 
+	// Instantiate the extension object and return it.
 	let ext = new Ext();
 	return ext;
 }
 
 function main() {
+	// Enable the extension object returned by init()
 	init().enable();
 };

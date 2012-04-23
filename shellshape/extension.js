@@ -1,5 +1,6 @@
 // shellshape -- a tiling window manager extension for gnome-shell
 
+const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Meta = imports.gi.Meta;
@@ -153,7 +154,7 @@ const Ext = function Ext() {
 	function handle(name, func) {
 		self._bound_keybindings[name] = true;
 		var added = self.current_display().add_keybinding(name,
-			KEYBINDING_BASE,
+			new Gio.Settings({ schema: KEYBINDING_BASE }),
 			Meta.KeyBindingFlags.NONE,
 			function() {
 				self._do(func, "handler for binding " + name);

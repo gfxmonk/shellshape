@@ -121,8 +121,6 @@ function buildPrefsWidget() {
 		vbox.add(hbox);
 	})();
 
-
-
 	(function() {
 		let hbox = new Gtk.Box({
 			orientation: Gtk.Orientation.HORIZONTAL,
@@ -184,6 +182,40 @@ function buildPrefsWidget() {
 		scale.connect('value-changed', function(sw) {
 			var oldval = pref.get();
 			var newval = sw.get_value();
+			if (newval != pref.get()) {
+				pref.set(newval);
+			}
+		});
+	})();
+
+	let label = new Gtk.HSeparator();
+	vbox.add(label);
+
+	let label = new Gtk.Label({
+		label: _("<b>Icon settings:</b>"),
+		use_markup: true,
+		xalign: 0
+	});
+
+	//show icon
+	(function() {
+		let hbox = new Gtk.Box({
+			orientation: Gtk.Orientation.HORIZONTAL,
+			spacing: 20
+		});
+
+		let check = new Gtk.CheckButton({
+			label: "Show panel icon"
+		});
+
+		hbox.add(label);
+		hbox.pack_end(check, false, true, 0);
+		vbox.add(hbox);
+
+		var pref = config.SHOW_ICON;
+		check.set_active(pref.get());
+		check.connect('toggled', function() {
+			var newval = check.get_state()
 			if (newval != pref.get()) {
 				pref.set(newval);
 			}

@@ -16,6 +16,11 @@
 			<summary>Padding (in px) between layout tiles.</summary>
 			<description/>
 		</key>
+		<key type="b" name="show-icon">
+			<default>true</default>
+			<summary>Show panel icon</summary>
+			<description/>
+		</key>
 		<key type="s" name="default-layout">
 			<choices>
 				<choice value="floating"/>

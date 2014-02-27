@@ -215,7 +215,7 @@ function buildPrefsWidget() {
 		var pref = config.SHOW_ICON;
 		check.set_active(pref.get());
 		check.connect('toggled', function() {
-			var newval = check.get_state()
+			var newval = check.get_active()
 			if (newval != pref.get()) {
 				pref.set(newval);
 			}

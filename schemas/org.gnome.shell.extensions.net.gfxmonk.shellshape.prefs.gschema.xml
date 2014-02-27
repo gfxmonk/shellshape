@@ -16,9 +16,9 @@
 			<summary>Padding (in px) between layout tiles.</summary>
 			<description/>
 		</key>
-		<key type="b" name="show-icon">
+		<key type="b" name="show-indicator">
 			<default>true</default>
-			<summary>Show panel icon</summary>
+			<summary>Show indicator</summary>
 			<description/>
 		</key>
 		<key type="s" name="default-layout">

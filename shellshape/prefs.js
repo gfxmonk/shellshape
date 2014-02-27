@@ -192,12 +192,12 @@ function buildPrefsWidget() {
 	vbox.add(label);
 
 	let label = new Gtk.Label({
-		label: _("<b>Icon settings:</b>"),
+		label: _("<b>Indicator settings:</b>"),
 		use_markup: true,
 		xalign: 0
 	});
 
-	//show icon
+	//show indecator
 	(function() {
 		let hbox = new Gtk.Box({
 			orientation: Gtk.Orientation.HORIZONTAL,
@@ -205,14 +205,14 @@ function buildPrefsWidget() {
 		});
 
 		let check = new Gtk.CheckButton({
-			label: "Show panel icon"
+			label: "Show indicator"
 		});
 
 		hbox.add(label);
 		hbox.pack_end(check, false, true, 0);
 		vbox.add(hbox);
 
-		var pref = config.SHOW_ICON;
+		var pref = config.SHOW_INDICATOR;
 		check.set_active(pref.get());
 		check.connect('toggled', function() {
 			var newval = check.get_active()

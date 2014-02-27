@@ -39,6 +39,7 @@ const Ext = function Ext() {
 	self.prefs = new ShellshapeSettings.Prefs();
 	ShellshapeSettings.initTranslations();
 	self.screen_padding = 0;
+	self.indicator_at_init = false;
 
 	/* -------------------------------------------------------------
 	 *                 Utility functions
@@ -530,6 +531,7 @@ const Ext = function Ext() {
 		let pref = self.prefs.SHOW_INDICATOR;
 		let val = pref.get();
 		if(val){
+			self.indicator_at_init = true;
 			ShellshapeIndicator.enable(self);
 		}
 	};
@@ -666,7 +668,11 @@ const Ext = function Ext() {
 	// Disable the extension.
 	self.disable = function() {
 		self.log.info("shellshape disable() called");
-		self._do(function() { ShellshapeIndicator.disable();}, "disable indicator");
+		self._do(function() { 
+			if(self.indicator_at_init){
+				ShellshapeIndicator.disable();
+			}
+		}, "disable indicator");
 		self._do(self._disconnect_workspaces, "disable workspaces");
 		self._do(self._unbind_keys, "unbind keys");
 		self._do(function() { self.disconnect_tracked_signals(self); }, "disconnect signals");

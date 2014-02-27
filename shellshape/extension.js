@@ -517,8 +517,9 @@ const Ext = function Ext() {
 			self.connect_and_track(self, pref.gsettings, 'changed::' + pref.key, update);
 			update();
 		})();
-			
 	};
+
+
 
 	/* -------------------------------------------------------------
 	 *                   setup / teardown
@@ -526,7 +527,11 @@ const Ext = function Ext() {
 
 	// Enable ShellshapeIndicator
 	self._init_indicator = function() {
-		ShellshapeIndicator.enable(self);
+		let pref = self.prefs.SHOW_INDICATOR;
+		let val = pref.get();
+		if(val){
+			ShellshapeIndicator.enable(self);
+		}
 	};
 
 	// Resets the runtime state of the extension,

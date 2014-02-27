@@ -196,8 +196,9 @@ function buildPrefsWidget() {
 		use_markup: true,
 		xalign: 0
 	});
+	vbox.add(label);
 
-	//show indecator
+	//show indicator
 	(function() {
 		let hbox = new Gtk.Box({
 			orientation: Gtk.Orientation.HORIZONTAL,
@@ -205,11 +206,19 @@ function buildPrefsWidget() {
 		});
 
 		let check = new Gtk.CheckButton({
-			label: "Show indicator"
+			label: "Show indicator",
 		});
 
-		hbox.add(label);
-		hbox.pack_end(check, false, true, 0);
+		let label = new Gtk.Label({
+			label: "<small>" + 
+				_("NOTE: Gnome shell needs to be restarted for this setting to apply.")+
+				"\n" + _("You can still access Shellshape Settings through the Gnome Tweak Tool.") + 
+			"</small>",
+			use_markup: true
+		});
+
+		hbox.add(check);
+		hbox.pack_end(label,false,false,20);
 		vbox.add(hbox);
 
 		var pref = config.SHOW_INDICATOR;

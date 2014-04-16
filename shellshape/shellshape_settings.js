@@ -119,6 +119,12 @@ function Prefs() {
 		get: function() { return settings.get_int(this.key); },
 		set: function(v) { settings.set_int(this.key, v); },
 	};
+	this.SHOW_INDICATOR = {
+		key: 'show-indicator',
+		gsettings: settings,
+		get: function() { return settings.get_boolean(this.key); },
+		set: function(v) { settings.set_boolean(this.key, v); },
+	};
 };
 
 function initTranslations(domain) {

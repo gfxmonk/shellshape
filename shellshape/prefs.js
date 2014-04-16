@@ -121,8 +121,6 @@ function buildPrefsWidget() {
 		vbox.add(hbox);
 	})();
 
-
-
 	(function() {
 		let hbox = new Gtk.Box({
 			orientation: Gtk.Orientation.HORIZONTAL,
@@ -184,6 +182,49 @@ function buildPrefsWidget() {
 		scale.connect('value-changed', function(sw) {
 			var oldval = pref.get();
 			var newval = sw.get_value();
+			if (newval != pref.get()) {
+				pref.set(newval);
+			}
+		});
+	})();
+
+	let label = new Gtk.HSeparator();
+	vbox.add(label);
+
+	let label = new Gtk.Label({
+		label: _("<b>Indicator settings:</b>"),
+		use_markup: true,
+		xalign: 0
+	});
+	vbox.add(label);
+
+	//show indicator
+	(function() {
+		let hbox = new Gtk.Box({
+			orientation: Gtk.Orientation.HORIZONTAL,
+			spacing: 20
+		});
+
+		let check = new Gtk.CheckButton({
+			label: "Show indicator",
+		});
+
+		let label = new Gtk.Label({
+			label: "<small>" + 
+				_("NOTE: Gnome shell needs to be restarted for this setting to apply.")+
+				"\n" + _("You can still access Shellshape Settings through the Gnome Tweak Tool.") + 
+			"</small>",
+			use_markup: true
+		});
+
+		hbox.add(check);
+		hbox.pack_end(label,false,false,20);
+		vbox.add(hbox);
+
+		var pref = config.SHOW_INDICATOR;
+		check.set_active(pref.get());
+		check.connect('toggled', function() {
+			var newval = check.get_active()
 			if (newval != pref.get()) {
 				pref.set(newval);
 			}

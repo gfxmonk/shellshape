@@ -310,6 +310,7 @@ Workspace.prototype = {
 	disconnect_workspace_signals: function(win) {
         if(!win.workspace_signals) {
             this.log.debug("No workspace_signals registered on window " + win);
+            return;
         }
         this.log.debug("Disconnecting " + win.workspace_signals.length + " workspace-managed signals from window");
         win.workspace_signals.map(Lang.bind(this, function(signal) {

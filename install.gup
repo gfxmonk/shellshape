@@ -1,0 +1,8 @@
+#!bash -eu
+here="$(pwd)"
+gup --always
+
+dest="/usr/share/gnome-shell/extensions/shellshape@gfxmonk.net"
+echo "Installing to $dest"
+mkdir -p "$(dirname "$dest")"
+ln -sfn "$here/shellshape" "$dest"

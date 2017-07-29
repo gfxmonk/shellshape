@@ -5,4 +5,4 @@ gup --always
 dest="$PREFIX/usr/share/gnome-shell/extensions/shellshape@gfxmonk.net"
 echo "Installing to $dest"
 mkdir -p "$(dirname "$dest")"
-ln -sfn "$here/shellshape" "$dest"
+cp -R "$here/shellshape" "$dest"

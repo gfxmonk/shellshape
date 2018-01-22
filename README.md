@@ -25,6 +25,10 @@ To build the latest version, you'll need to install `npm` (the node.js package m
  3. you can install the extension to a symlink in ~/.local/share/gnome-shell/extensions using:
 
         tools/gup dev-install
+        
+    Alternatively, to install the extension system-wide (available for all users), run:
+
+        tools/gup install
 
 To compile stuff (after changing some source code), run `tools/gup compile`. You can add e.g `-j3` to compile stuff in parallel.
 
